@@ -23,4 +23,21 @@ public class HashTable {
         }
         hashArray[hashVal] = item;
     }
+
+    public DataItem delete(int key) {
+        int hashVal = hashFunc(key);
+
+        while(hashArray[hashVal] != null) {
+            if (hashArray[hashVal].getKey() == key) {
+                DataItem copy = hashArray[hashVal];
+                hashArray[hashVal] = nonItem;
+                return copy;
+            }
+            ++hashVal;
+            hashVal %= arraySize;
+        }
+
+        return null;
+    }
+
 }
