@@ -1,5 +1,28 @@
 public class HashTable {
 
+    private DataItem[] hashArray;
+    private int arraySize;
+    private DataItem nonItem;
+
+    public HashTable(int size) {
+        arraySize = size;
+        hashArray = new DataItem[arraySize];
+        nonItem = new DataItem(-1);
+    }
+
+    public void displayTable() {
+        System.out.println("Table: ");
+        for (int i = 0; i < arraySize; i++) {
+            if(hashArray[i] != null)
+                System.out.print(hashArray[i].toString() + " ");
+            else
+                System.out.print("** ");
+            if(i % 4 == 0) System.out.println();
+        }
+    }
+
+    public int hashFunc(int key) { return key % arraySize; }
+
     //Неплохо еще проверять, чтобы массив не был заполнен, иначе цикл будет вечным
     public DataItem find(int key) {
         int hashVal = hashFunc(key);
@@ -17,7 +40,7 @@ public class HashTable {
         int key = item.getKey();
         int hashVal = hashFunc(key);
 
-        while(hashArray[hashVal] != null && hashArray[hashVal].iData != -1) {
+        while(hashArray[hashVal] != null && hashArray[hashVal].getKey() != -1) {
             ++hashVal;
             hashVal %= arraySize;
         }

@@ -9,4 +9,11 @@ public class DataItem {
     public int getKey() {
         return iData;
     }
+
+    @Override
+    public String toString() {
+        return "DataItem{" +
+                "Key=" + iData +
+                '}';
+    }
 }
