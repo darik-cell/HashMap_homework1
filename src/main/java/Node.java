@@ -2,21 +2,16 @@ import java.util.Map;
 import java.util.Objects;
 
 public class Node<K, V> implements Map.Entry<K, V> {
-    private int hash;
-    private final K key;
-    private V value;
-    private Node<K, V> next;
+    final int hash;
+    final K key;
+    V value;
+    Node<K, V> next;
 
     public Node(K key, V value, Node<K, V> next, int hash) {
         this.key = key;
         this.value = value;
         this.next = next;
         this.hash = hash;
-    }
-
-    public Node(Map.Entry<K, V> entry) {
-        this.key = entry.getKey();
-        this.value = entry.getValue();
     }
 
     public K getKey() {
@@ -54,4 +49,5 @@ public class Node<K, V> implements Map.Entry<K, V> {
                 && Objects.equals(key, e.getKey())
                 && Objects.equals(value, e.getValue());
     }
+
 }
