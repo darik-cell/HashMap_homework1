@@ -8,7 +8,6 @@ public class MyHashMap<K, V> implements Map<K, V> {
     Set<K> keySet;
     Collection<V> values;
     private int size;
-    private int capacity;
     private int threshold;
     final float loadFactor;
 
@@ -115,13 +114,19 @@ public class MyHashMap<K, V> implements Map<K, V> {
             newCap = oldThr;
             newThr = Integer.MAX_VALUE;
         }
-        else if (oldTab != null && oldCap > 0 && oldCap < MAXIMUM_CAPACITY) {
-            newCap = oldCap << 1;
-            newThr = oldThr << 1;
-        }
-        else if (oldTab != null && oldCap >= MAXIMUM_CAPACITY) {
-            threshold = Integer.MAX_VALUE;
-            return oldTab;
+        else if (oldTab != null) {
+            if (oldCap > 0 && oldCap < 9) {
+                newCap = oldCap << 1;
+                newThr = (int) (newCap * loadFactor);
+            }
+            else if (oldCap >= MAXIMUM_CAPACITY) {
+                threshold = Integer.MAX_VALUE;
+                return oldTab;
+            }
+            else {
+                newCap = oldCap << 1;
+                newThr = oldThr << 1;
+            }
         } else {
             newThr = 0;
             newCap = 0;
@@ -216,9 +221,9 @@ public class MyHashMap<K, V> implements Map<K, V> {
         int s = m.size();
         if ((tab = table) == null) {
             float fts = (float) s / loadFactor + 1.0F;
-            int ft = (fts < MAXIMUM_CAPACITY) ? (int) fts : MAXIMUM_CAPACITY;
-            if (threshold < ft)
-                threshold = tableSizeFor(ft);
+            int its = (fts < MAXIMUM_CAPACITY) ? (int) fts : MAXIMUM_CAPACITY;
+            if (threshold < its)
+                threshold = tableSizeFor(its);
         }
         else {
             while (s > threshold && table.length < MAXIMUM_CAPACITY)
@@ -421,6 +426,22 @@ public class MyHashMap<K, V> implements Map<K, V> {
         public final Iterator<V> iterator() { return new ValueIterator(); }
 
         public final boolean contains(Object o) { return containsValue(o); }
+    }
+
+    int getThreshold() {
+        return threshold;
+    }
+
+    Node[] getTable() {
+        return table;
+    }
+
+    void setSize(int size) {
+        this.size = size;
+    }
+
+    void setTable(Node<K, V>[] tab) {
+        table = tab;
     }
 
 }

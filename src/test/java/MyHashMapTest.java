@@ -2,6 +2,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class MyHashMapTest {
@@ -157,10 +159,10 @@ class MyHashMapTest {
 
     @Nested
     class RemoveNodeTest {
-        private static MyHashMap<Integer, String> map;
+        private MyHashMap<Integer, String> map;
 
-        @BeforeAll
-        static void setUp() {
+        @BeforeEach
+        void setUp() {
             map = new MyHashMap<>(16);
 
             map.put(16, "16");
@@ -270,4 +272,170 @@ class MyHashMapTest {
             assertEquals(mapToNotEmpty.size(), 1 << 14);
         }
     }
+
+    @Nested
+    class HelperMethodsTest {
+        private MyHashMap<Integer, String> map;
+
+        @BeforeEach
+        void setUp() {
+            map = new MyHashMap<>(16);
+
+            map.put(0, "0");
+            map.put(16, "16");
+            map.put(32, "32");
+            map.put(null, "null");
+
+            map.put(5, "5");
+        }
+
+        @Test
+        void testContainsKey() {
+            assertTrue(map.containsKey(null));
+            assertTrue(map.containsKey(16));
+            assertTrue(map.containsKey(0));
+            assertTrue(map.containsKey(5));
+            assertFalse(map.containsKey(10));
+            assertFalse(map.containsKey(48));
+        }
+
+        @Test
+        void testContainsValue() {
+            var map = new MyHashMap<Integer, String>(16);
+
+            assertFalse(map.containsValue("1"));
+
+            map.put(0, "0");
+            map.put(16, "16");
+            map.put(32, "32");
+            map.put(null, null);
+            map.put(5, "5");
+
+            assertTrue(map.containsValue(null));
+            assertTrue(map.containsValue("0"));
+            assertTrue(map.containsValue("32"));
+            assertTrue(map.containsValue("5"));
+            assertFalse(map.containsValue("null"));
+        }
+
+        @Test
+        void testHash() {
+            assertEquals(0, map.hash(null));
+            assertEquals(3556516, map.hash("test"));
+        }
+
+        @Test
+        void testTableSizeFor() {
+            assertEquals(4, map.tableSizeFor(0));
+            assertEquals(4, map.tableSizeFor(1));
+            assertEquals(2, map.tableSizeFor(2));
+            assertEquals(1 << 30, map.tableSizeFor(Integer.MAX_VALUE));
+            assertEquals(256, map.tableSizeFor(200));
+        }
+
+        @Test
+        void testClear() {
+            map.clear();
+            var tab = map.getTable();
+
+            assertEquals(0, map.size());
+
+            for (int i = 0; i < tab.length; ++i) {
+                assertNull(tab[i]);
+            }
+        }
+    }
+
+    @Nested
+    class IteratorsTest {
+        private MyHashMap<Integer, String> map;
+
+        @BeforeEach
+        void setUp() {
+            map = new MyHashMap<>(16);
+
+            map.put(0, "0");
+            map.put(16, "16");
+            map.put(32, "32");
+            map.put(48, "48");
+            map.put(null, null);
+
+            map.put(5, "5");
+        }
+
+        @Test
+        void testKeyIterator() {
+            var keyIterator = map.keySet().iterator();
+            assertTrue(keyIterator.hasNext());
+            assertEquals(0, keyIterator.next());
+
+            var tab = map.getTable();
+            keyIterator.remove();
+            assertEquals(16, tab[0].key);
+            assertEquals(16, keyIterator.next());
+            keyIterator.next();
+            keyIterator.remove();
+            assertEquals(48, tab[0].next.key);
+            assertEquals(48, keyIterator.next());
+            keyIterator.remove();
+            assertNull( tab[0].next.key);
+            keyIterator.next();
+            keyIterator.next();
+            keyIterator.remove();
+            assertNull( tab[5]);
+        }
+
+        @Test
+        void testKeySet() {
+            var keySet = map.keySet();
+            assertEquals(6, keySet.size());
+            assertTrue(keySet.contains(null));
+            assertTrue(keySet.remove(16));
+            keySet.clear();
+            assertEquals(0, keySet.size());
+        }
+
+        @Test
+        void testEntrySet() {
+            var entrySet = map.entrySet();
+
+            assertEquals(new Node<>(0, "0", null, map.hash(16)), entrySet.iterator().next());
+            assertEquals(6, entrySet.size());
+            assertTrue(entrySet.contains(new Node<>(16, "16", null, map.hash(16))));
+            assertTrue(entrySet.remove(new Node<>(16, "16", null, map.hash(16))));
+            assertFalse(entrySet.contains(new Node<>(16, "16", null, map.hash(16))));
+            assertFalse(entrySet.remove(new Node<>(16, "16", null, map.hash(16))));
+            entrySet.clear();
+            assertEquals(0, entrySet.size());
+        }
+
+        @Test
+        void testValues() {
+            assertEquals(6, map.values().size());
+            assertTrue(map.values().contains(null));
+            assertEquals("0", map.values().iterator().next());
+            map.values().clear();
+            assertEquals(0, map.values().size());
+        }
+
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
