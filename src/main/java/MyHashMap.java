@@ -1,6 +1,14 @@
 import java.util.*;
 import java.util.function.Consumer;
 
+/**
+ * Класс хэш таблицы, реализующий интерфейс Map<K,V>
+ * Допускает null в качестве значений и ключей.
+ *
+ * @param <K> тип ключей, хранящихся в хэш таблице
+ * @param <V> тип хранимых значений
+ * @author Alexander Alyonushka
+ */
 public class MyHashMap<K, V> implements Map<K, V> {
 
     private Node<K, V>[] table;
@@ -15,6 +23,18 @@ public class MyHashMap<K, V> implements Map<K, V> {
     static final int INITIAL_CAPACITY = 16;
     static final float LOAD_FACTOR = 0.75F;
 
+    /**
+     * Конструктор с начальной емкостью таблицы и коэффициентом загрузки,
+     * создает объект {@code MyHashMap}, у которого в {@code threshold} хранится
+     * значение {@code capacity},
+     * сама таблица не создается, т.к. используется отложенная инициализация,
+     * т.е. таблица создается при первой вставке.
+     * Т.к. используются оптимизации связанные с операциями сдвига, то
+     * {@code capacity} доводится до ближайшего большего значения, являющегося
+     * степенью двойки
+     * @param capacity емкость после вставки первого элемента (доводится до степени двойки)
+     * @param loadFactor коэффициент загрузки, влияет на быстродействие HashMap
+     */
     public MyHashMap(int capacity, float loadFactor) {
         if (capacity < 0) {
             throw new IllegalArgumentException("capacity < 0");
@@ -27,27 +47,62 @@ public class MyHashMap<K, V> implements Map<K, V> {
         this.threshold = tableSizeFor(capacity);
     }
 
+    /**
+     * Использует {@code MyHashMap(int capacity, float loadFactor)} для
+     * инициализации, с заданным пользователем {@code capacity} и коэффициентом
+     * загрузки по умолчанию (0.75)
+     * @param capacity емкость после вставки первого элемента (доводится до степени двойки)
+     */
     public MyHashMap(int capacity) {
         this(capacity, LOAD_FACTOR);
     }
 
+    /**
+     * Создает объект хэш таблицы с дефолтным {@code loadFactor} (0.75),
+     * все остальные поля инициализируются по умолчанию
+     */
     public MyHashMap() {
         this.loadFactor = LOAD_FACTOR;
     }
 
+    /**
+     * Возвращает количество сопоставлений ключ-значение в этой хэш-таблице
+     * @return количество сопоставлений ключ-значение в этой хэш-таблице
+     */
     public int size() {
         return size;
     }
 
+    /**
+     * Возвращает {@code true}, если эта хэш-таблица не содержит сопоставлений ключ-значение.
+     * @return {@code true}, если эта хэш-таблица не содержит сопоставлений ключ-значение.
+     */
     public boolean isEmpty() {
         return size == 0;
     }
 
+    /**
+     * Возвращает значение, которое соответствует данному ключу,
+     * если нету пары ключ-значение с таким ключём, то возвращается null.
+     *
+     * Если вернулся null, то это необязательно означает, что нету
+     * такой пары ключ-значение, с данным ключем, возмножно что значение
+     * в данной ноде есть {@code null}
+     * @param key ключ для которого мы ищем значение
+     * @return значение соответствующее данному ключу или {@code null},
+     * если данного ключа нету в хэш-таблице
+     */
     public V get(Object key) {
         Node<K,V> e;
         return (e = getNode(key)) == null ? null : e.value;
     }
 
+    /**
+     * Реализует Map.get и связанные методы
+     *
+     * @param key ключ
+     * @return узел или null, если ничего не найдено
+     */
     final Node<K,V> getNode(Object key) {
         Node<K,V>[] tab; Node<K,V> first, e; int tabLength, hash;
         if ((tab = table) != null && (tabLength = tab.length) > 0 &&
@@ -66,10 +121,30 @@ public class MyHashMap<K, V> implements Map<K, V> {
         return null;
     }
 
+    /**
+     * Связывает указанное значение с указанным ключом в этой карте.
+     * Если карта ранее содержала отображение для этого ключа, старое
+     * значение заменяется.
+     *
+     * @param key ключ, с которым должно быть связано указанное значение
+     * @param value значение, которое должно быть связано с указанным ключом
+     * @return предыдущее значение, связанное с {@code key}, или
+     * {@code null}, если для {@code key} не было отображения.
+     * (Возврат {@code null} также может указывать на то, что карта
+     * ранее связывала {@code null} с {@code key}.)
+     */
     public V put(K key, V value) {
         return putVal(hash(key), key, value);
     }
 
+    /**
+     * Реализует Map.put и связанные методы.
+     *
+     * @param hash хэш для ключа
+     * @param key ключ
+     * @param value значение для вставки
+     * @return предыдущее значение или null, если его не было
+     */
     final V putVal(int hash, K key, V value) {
         Node<K,V>[] tab; int n, i; Node<K,V> tabNode;
         if ((tab = table) == null || (n = table.length) == 0)
@@ -96,6 +171,14 @@ public class MyHashMap<K, V> implements Map<K, V> {
         return null;
     }
 
+    /**
+     * Создает таблицу, если не была создана, или вдвое увеличивает размер, если возможно.
+     * Если {@code table == null}, то создает новую, в соответствии с начальной
+     * емкостью, которая является степенью двойки и хранится в threshold.
+     * Иначе, удваивает размер, и т.к. размер это степень двойки, элементы из одного баккета
+     * либо остаются по тому же индексу, либо смещаются на старый размер таблицы вперед.
+     * @return
+     */
     final Node<K,V>[] resize() {
         Node<K,V>[] oldTab = table;
         int oldCap, oldThr;
@@ -179,11 +262,28 @@ public class MyHashMap<K, V> implements Map<K, V> {
         return newTab;
     }
 
+    /**
+     * Удаляет отображение для указанного ключа из этой карты, если оно присутствует.
+     *
+     * @param key ключ, отображение которого должно быть удалено из карты
+     * @return предыдущее значение, связанное с {@code key}, или
+     * {@code null}, если не было отображения для {@code key}.
+     * (Возврат {@code null} также может означать, что карта
+     * ранее ассоциировала {@code null} с {@code key}.)
+     */
     public V remove(Object key) {
         Node<K,V> e;
         return (e = removeNode(hash(key), key, null)) == null ? null : e.value;
     }
 
+    /**
+     * Реализует Map.remove и связанные методы.
+     *
+     * @param hash хэш для ключа
+     * @param key ключ
+     * @param value значение для сравнения, если matchValue равно true, иначе игнорируется
+     * @return узел или null, если такого нет
+     */
     final Node<K,V> removeNode(int hash, Object key, Object value) {
         Node<K,V>[] tab; Node<K,V> firstNode; int index, n;
         if ((tab = table) != null && (n = tab.length) > 0 &&
@@ -216,6 +316,13 @@ public class MyHashMap<K, V> implements Map<K, V> {
         return null;
     }
 
+    /**
+     * Добавляет все отображения из мапы m, в данную мапу. Прошлые отображения
+     * сохраняются если они не пересекаются с отображениями из m, если пересекаются
+     * то ключам ставятся в соответствие значения из m.
+     * @param m отображения, которые должны быть сохранены в этой карте
+     * @throws NullPointerException если указанная карта равна null
+     */
     public void putAll(Map<? extends K, ? extends V> m) {
         Node<K,V>[] tab;
         int s = m.size();
@@ -236,6 +343,10 @@ public class MyHashMap<K, V> implements Map<K, V> {
         }
     }
 
+    /**
+     * Не изменяет размер таблицы. Ставит во все ячейки таблицы значение {@code null}.
+     * Также ставит {@code size = 0}
+     */
     public void clear() {
         Node<K,V>[] tab;
         if ((tab = table) != null && size > 0) {
@@ -249,6 +360,13 @@ public class MyHashMap<K, V> implements Map<K, V> {
         return getNode(key) != null;
     }
 
+    /**
+     * Возвращает {@code true}, если в мапе для какого-то ключа {@code value}
+     * является отображением.
+     * @param value значение, присутствие которого в этой карте должно быть проверено
+     * @return {@code true}, если в мапе для какого-то ключа {@code value}
+     * является отображением.
+     */
     public boolean containsValue(Object value) {
         Node<K,V>[] tab; V v;
         if ((tab = table) != null && size > 0) {
@@ -264,18 +382,30 @@ public class MyHashMap<K, V> implements Map<K, V> {
     }
 
 
-
+    /**
+     * Вычисляет hash для ключа. Т.к. для вычисления индекса, из-за того что размер таблицы
+     * это степень двойки, используются только младшие биты, то для улучшения распределения
+     * хэшей, используется XOR для учета старших битов.
+     * @param key
+     * @return hashCode
+     */
     static final int hash(Object key) {
         int h;
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
 
+    /**
+     * Рассчитывает размер таблицы, для заданного пользователем начального значения.
+     * Размер всегда является степенью двойки, для использования быстрых побитовых операций.
+     * @param cap начальная емкость, которую задал пользователь
+     * @return capacity емкость, являющуюся ближайшей степенью двойки, больше чем cap
+     */
     static final int tableSizeFor(int cap) {
         int n = -1 >>> Integer.numberOfLeadingZeros(cap - 1);
         return (n < 0) ? 4 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
     }
 
-    //Итераторы
+
     abstract class HashIterator {
         Node<K, V> next;
         Node<K, V> current;
@@ -445,25 +575,3 @@ public class MyHashMap<K, V> implements Map<K, V> {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
